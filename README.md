@@ -3,6 +3,8 @@
 ## Description
 CLI for managing files in AWS S3. Supports listing files, uploading files, listing files matching a regex pattern, and deleting files matching a regex pattern.
 
+![image](https://github.com/BeataKula/lcloudTask/assets/101329582/8cdd7c72-fabe-4e7b-87d5-ea33159181d4)
+
 ## Usage
 
 ### List all files in the S3 bucket
@@ -43,3 +45,4 @@ export AWS_SECRET_ACCESS_KEY=your_secret_access_key
 The CLI requires AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables to be set.
 Make sure you have the necessary access permissions to your S3 bucket.
 The CLI is intended for use with Node.js version 14.x or newer.
+
