@@ -1,46 +1,18 @@
-#!/usr/bin/env node
-
 require('dotenv').config();
-const { S3Client, ListObjectsV2Command, GetBucketLocationCommand } = require('@aws-sdk/client-s3');
+const { configureS3Client } = require('./config/s3ClientConfig');
+const { ListObjectsV2Command, PutObjectCommand } = require('@aws-sdk/client-s3');
+const fs = require('fs');
 
-
-const detectBucketRegion = async (bucketName) => {
-    const s3Client = new S3Client({
-        region: 'us-east-1',
-        credentials: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-        }
-    });
-
-    const params = { Bucket: bucketName };
-    try {
-        const command = new GetBucketLocationCommand(params);
-        const data = await s3Client.send(command);
-        const region = data.LocationConstraint || 'us-east-1';
-        return region;
-    } catch (error) {
-        console.error('Error detecting bucket region:', error);
-        throw error;
-    }
-};
-
+const bucketName = 'developer-task';
+const localFilePath = 'uploads/exampleBK.txt';
+const remoteFileName = 'exampleBK.txt';
 
 const listFiles = async (bucketName) => {
     try {
-        const region = await detectBucketRegion(bucketName);
-        console.log(`Detected bucket region: ${region}`);
-        const s3Client = new S3Client({
-            region: region,
-            credentials: {
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-            }
-        });
-
+        const s3Client = await configureS3Client(bucketName);
         const params = {
             Bucket: bucketName,
-            Prefix: 'a-wing/' 
+            Prefix: 'a-wing/'
         };
 
         const command = new ListObjectsV2Command(params);
@@ -53,8 +25,31 @@ const listFiles = async (bucketName) => {
     }
 };
 
+const uploadFile = async (bucketName, filePath, key) => {
+    try {
+        const s3Client = await configureS3Client(bucketName);
+        const fileStream = fs.createReadStream(filePath);
+
+        const params = {
+            Bucket: bucketName,
+            Key: key,
+            Body: fileStream
+        };
+       
+        const command = new PutObjectCommand(params);
+        await s3Client.send(command);
+        console.log(`File uploaded successfully: ${key}`);
+    } catch (error) {
+        console.error('Error uploading file:', error);
+    }
+};
+
 const args = process.argv.slice(2);
 
 if (args[0] === 'list-files') {
-    listFiles('developer-task');
+    listFiles(bucketName);
+} else if (args[0] === 'upload-file') {
+    const filePath = args[1];
+    const key = `a-wing/${args[2]}`;
+    uploadFile(bucketName, filePath, key); //node index.js upload-file uploads/exampleBK.txt exampleBK.txt
 }
